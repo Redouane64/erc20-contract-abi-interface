@@ -1,0 +1,25 @@
+{
+  "name": "contract-abi-interface",
+  "version": "1.0.0",
+  "description": "interface to interact with etheruem smart contracts",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "Redhouane Sobaihi <redouane.sobaihi@live.com>",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^10.0.0",
+    "ethers": "^5.4.3",
+    "web3": "^1.5.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.24",
+    "@types/node": "^16.4.8",
+    "jest": "^27.0.6",
+    "nodemon": "^2.0.12",
+    "ts-jest": "^27.0.4",
+    "ts-node": "^10.1.0",
+    "typescript": "^4.3.5"
+  }
+}
