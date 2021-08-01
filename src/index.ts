@@ -1,4 +1,5 @@
-import { Wallet } from "ethers";
+import { Event, Wallet } from "ethers";
+import { EventEmitter } from "stream";
 import Web3 from "web3";
 
 /**
@@ -27,6 +28,27 @@ type IWeb3 = InstanceType<typeof Web3>;
 type WebSocketProvider = InstanceType<typeof Web3.providers.WebsocketProvider>;
 
 /**
+ * This type from Web3
+ */
+export interface EventData {
+  returnValues: {
+    [key: string]: any;
+  };
+  raw: {
+    data: string;
+    topics: string[];
+  };
+  event: string;
+  signature: string;
+  logIndex: number;
+  transactionIndex: number;
+  transactionHash: string;
+  blockHash: string;
+  blockNumber: number;
+  address: string;
+}
+
+/**
  * Contract options
  */
 export type ContractInterfaceOptions = {
@@ -36,10 +58,12 @@ export type ContractInterfaceOptions = {
   abi: any;
 };
 
+export type ContractEventHandlerFunc = (error: Error | undefined, data: EventData | undefined) => Promise<void>;
+
 /**
  * Contracts interaction interface
  */
-export class ContractInterface {
+export class ContractInterface extends EventEmitter {
   /**
    * Underlying web3 instance
    */
@@ -51,6 +75,8 @@ export class ContractInterface {
    * @param options contracts options
    */
   constructor(private readonly options: ContractInterfaceOptions) {
+    super();
+
     this._web3 = new Web3();
     this._web3.setProvider(options.provider);
 
@@ -68,13 +94,37 @@ export class ContractInterface {
   }
 
   async call(methodName: string, ...args: any): Promise<unknown | undefined> {
-    const method = this._contract.methods[methodName].apply({}, [...args])
-    const sign = await this._account.sign(method.encodeABI())
+    const method = this._contract.methods[methodName].apply({}, [...args]);
+    const gas = await this._web3.eth.estimateGas({
+      from: this._account.address,
+      to: this.options.contractAddress,
+      value: 0,
+      data: method.encodeABI()
+    });
+    const sign = await this._account.signTransaction({
+      from: this._account.address,
+      to: this.options.contractAddress,
+      data: method.encodeABI(),
+      gas,
+    });
     if (sign.rawTransaction !== undefined) {
-      return await this._web3.eth.sendSignedTransaction(sign.rawTransaction)
+      return await this._web3.eth.sendSignedTransaction(sign.rawTransaction);
     }
 
     return undefined;
   }
 
+  subscribeToEvent(
+    event: string,
+    callback: ContractEventHandlerFunc,
+    options: any
+  ): void {
+    this._contract.events[event](
+      { ...options },
+      (error: Error | undefined, data: EventData | undefined) => {
+        callback(error, data);
+        this.emit(event, { error, data });
+      }
+    );
+  }
 }
