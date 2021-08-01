@@ -1,4 +1,5 @@
 node_modules
-assets
+assets/*
+!assets/.gitkeep
 .env*
 !.env_example

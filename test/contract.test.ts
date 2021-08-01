@@ -18,7 +18,7 @@ web3.setProvider(provider)
 const wallet = Wallet.fromMnemonic(mnemonic)
 web3.eth.accounts.privateKeyToAccount(wallet.privateKey)
 
-var contract = new web3.eth.Contract(<any>abi, contract_address, {
+const contract = new web3.eth.Contract(<any>abi, contract_address, {
     from: wallet.address
 });
 
