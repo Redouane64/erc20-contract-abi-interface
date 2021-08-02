@@ -93,7 +93,7 @@ export class ContractInterface extends EventEmitter {
     );
   }
 
-  async call(methodName: string, ...args: any): Promise<unknown | undefined> {
+  async call(methodName: string, ...args: any): Promise<any | undefined> {
     const method = this._contract.methods[methodName].apply({}, [...args]);
     const gas = await this._web3.eth.estimateGas({
       from: this._account.address,
