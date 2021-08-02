@@ -5,6 +5,7 @@ import Web3 from 'web3'
 import { Wallet } from 'ethers'
 
 import { abi } from '../assets/Bridge.json'
+import { ContractInterface } from '../src'
 
 const provider_uri = String(process.env.PROVIDER_URI)
 const contract_address = String(process.env.CONTRACT_ADDRESS)
@@ -24,6 +25,16 @@ const contract = new web3.eth.Contract(<any>abi, contract_address, {
 
 test('Update Token Name', async () => {
 
+    const contract = new ContractInterface({
+        abi,
+        contractAddress: contract_address,
+        mnemonic: mnemonic,
+        provider: provider
+    })
+
+    const receipt = await contract.call('updateTokenName', 'REDCOIN', 'Redouane Coin Token')
+
+    /*
     const method = contract.methods.updateTokenName('REDCOIN', 'Coin By Redouane S.')
 
     const gas = await web3.eth.estimateGas({ 
@@ -41,7 +52,7 @@ test('Update Token Name', async () => {
     }, wallet.privateKey)
 
     const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction!)
-
+    */
     expect(receipt.status)
     expect(receipt.transactionHash)
 
