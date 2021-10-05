@@ -53,12 +53,15 @@ export interface EventData {
  */
 export type ContractInterfaceOptions = {
   provider: WebSocketProvider;
-  mnemonic: Mnemonic;
-  contractAddress: Address;
+  mnemonic?: Mnemonic;
+  address: Address;
   abi: any;
 };
 
-export type ContractEventHandlerFunc = (error: Error | undefined, data: EventData | undefined) => Promise<void>;
+export type ContractEventHandlerFunc = (
+  error: Error | undefined,
+  data: EventData | undefined
+) => Promise<void>;
 
 /**
  * Contracts interaction interface
@@ -81,32 +84,39 @@ export class ContractInterface extends EventEmitter {
     this._web3.setProvider(options.provider);
 
     // initialize contract
-    this._contract = new this._web3.eth.Contract(
-      options.abi,
-      options.contractAddress
-    );
+    this._contract = new this._web3.eth.Contract(options.abi, options.address);
 
     // initialize account
-    const wallet = Wallet.fromMnemonic(options.mnemonic);
-    this._account = this._web3.eth.accounts.privateKeyToAccount(
-      wallet.privateKey
-    );
+    if (options.mnemonic) {
+      const wallet = Wallet.fromMnemonic(options.mnemonic);
+      this._account = this._web3.eth.accounts.privateKeyToAccount(
+        wallet.privateKey
+      );
+    }
   }
 
   async call(methodName: string, ...args: any): Promise<any | undefined> {
+
+    if (!this._account) {
+      throw new Error('Account is not set')
+    }
+
     const method = this._contract.methods[methodName].apply({}, [...args]);
+
     const gas = await this._web3.eth.estimateGas({
       from: this._account.address,
-      to: this.options.contractAddress,
+      to: this.options.address,
       value: 0,
-      data: method.encodeABI()
+      data: method.encodeABI(),
     });
+
     const sign = await this._account.signTransaction({
       from: this._account.address,
-      to: this.options.contractAddress,
+      to: this.options.address,
       data: method.encodeABI(),
       gas,
     });
+
     if (sign.rawTransaction !== undefined) {
       return await this._web3.eth.sendSignedTransaction(sign.rawTransaction);
     }
